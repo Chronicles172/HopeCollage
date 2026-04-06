@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SchoolConnect — Parent & Student Registry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #0B1F3A;
+    --navy-mid: #1A3558;
+    --navy-light: #2B4F7E;
+    --gold: #D4993A;
+    --gold-light: #EDB95A;
+    --cream: #FAF7F2;
+    --cream-dark: #F0EAE0;
+    --text: #0B1F3A;
+    --text-muted: #5A6E87;
+    --white: #FFFFFF;
+    --success: #1B7E5A;
+    --danger: #C0392B;
+    --border: rgba(11,31,58,0.12);
+    --shadow: 0 4px 24px rgba(11,31,58,0.10);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  /* ── NAV ── */
+  nav {
+    background: var(--navy);
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 clamp(1rem, 5vw, 2.5rem);
+    height: 64px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+  }
+  .nav-brand {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none;
+  }
+  .nav-logo {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--gold);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-logo svg { display: block; }
+  .nav-brand-text { font-family: var(--font-display); font-size: 18px; color: var(--white); letter-spacing: 0.01em; }
+  .nav-brand-text span { color: var(--gold-light); }
+
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a {
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 400;
+    padding: 6px 14px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .nav-links a:hover, .nav-links a.active { color: var(--white); background: rgba(255,255,255,0.1); }
+  .nav-links a.active { color: var(--gold-light); }
+
+  .nav-btn {
+    background: var(--gold);
+    color: var(--navy);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 18px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background 0.2s;
+    margin-left: 8px;
+  }
+  .nav-btn:hover { background: var(--gold-light); }
+
+  .hamburger {
+    display: none; flex-direction: column; gap: 5px; cursor: pointer;
+    background: none; border: none; padding: 6px;
+  }
+  .hamburger span {
+    display: block; width: 22px; height: 2px;
+    background: var(--white); border-radius: 2px;
+    transition: all 0.3s;
+  }
+
+  .mobile-menu {
+    display: none;
+    position: fixed; top: 64px; left: 0; right: 0;
+    background: var(--navy);
+    padding: 1rem clamp(1rem,5vw,2rem) 1.5rem;
+    border-bottom: 2px solid var(--gold);
+    z-index: 99;
+    flex-direction: column; gap: 4px;
+  }
+  .mobile-menu.open { display: flex; }
+  .mobile-menu a {
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    font-size: 15px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .mobile-menu a:hover { background: rgba(255,255,255,0.1); color: var(--white); }
+  .mobile-menu .nav-btn { align-self: flex-start; margin-left: 14px; margin-top: 8px; }
+
+  /* ── PAGES ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--navy);
+    color: var(--white);
+    padding: clamp(3rem,8vw,6rem) clamp(1rem,5vw,2.5rem);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(212,153,58,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-kicker {
+    display: inline-block;
+    background: rgba(212,153,58,0.18);
+    color: var(--gold-light);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(212,153,58,0.3);
+    margin-bottom: 1.25rem;
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    line-height: 1.15;
+    margin-bottom: 1rem;
+    max-width: 700px;
+    margin-left: auto; margin-right: auto;
+  }
+  .hero h1 em { color: var(--gold-light); font-style: italic; }
+  .hero p {
+    font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+    color: rgba(255,255,255,0.72);
+    max-width: 560px;
+    margin: 0 auto 2rem;
+  }
+  .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--gold);
+    color: var(--navy);
+    font-weight: 600;
+    font-size: 15px;
+    padding: 12px 28px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: var(--gold-light); transform: translateY(-1px); }
+  .btn-outline {
+    background: transparent;
+    color: var(--white);
+    font-weight: 500;
+    font-size: 15px;
+    padding: 12px 28px;
+    border-radius: 8px;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-block;
+  }
+  .btn-outline:hover { border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.06); }
+
+  .stats-row {
+    display: flex; justify-content: center; gap: clamp(1.5rem, 5vw, 4rem);
+    flex-wrap: wrap;
+    margin-top: 3rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .stat { text-align: center; }
+  .stat-num { font-family: var(--font-display); font-size: clamp(1.6rem,4vw,2.4rem); color: var(--gold-light); display: block; }
+  .stat-label { font-size: 12px; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* ── FEATURES ── */
+  .section { padding: clamp(2.5rem, 7vw, 5rem) clamp(1rem,5vw,2.5rem); max-width: 1100px; margin: 0 auto; }
+  .section-header { text-align: center; margin-bottom: clamp(2rem,5vw,3.5rem); }
+  .section-kicker { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.75rem; }
+  .section-title { font-family: var(--font-display); font-size: clamp(1.6rem,4vw,2.4rem); color: var(--navy); line-height: 1.2; }
+  .section-sub { font-size: 1rem; color: var(--text-muted); margin-top: 0.6rem; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+  .feat-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .feat-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+  .feat-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1rem;
+  }
+  .feat-icon.blue { background: #E3EFF9; }
+  .feat-icon.green { background: #E3F5EE; }
+  .feat-icon.amber { background: #FDF3E3; }
+  .feat-icon.purple { background: #EEE8FA; }
+  .feat-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; color: var(--navy); }
+  .feat-card p { font-size: 14px; color: var(--text-muted); line-height: 1.55; }
+
+  /* ── REGISTRATION FORM ── */
+  .reg-page { background: var(--cream); min-height: calc(100vh - 64px); }
+  .reg-header {
+    background: var(--navy);
+    color: var(--white);
+    padding: clamp(2rem,5vw,3.5rem) clamp(1rem,5vw,2.5rem);
+    text-align: center;
+  }
+  .reg-header h2 { font-family: var(--font-display); font-size: clamp(1.5rem,4vw,2.2rem); margin-bottom: 0.4rem; }
+  .reg-header p { color: rgba(255,255,255,0.65); font-size: 0.95rem; }
+
+  .reg-body { max-width: 760px; margin: 0 auto; padding: clamp(1.5rem,5vw,3rem) clamp(1rem,4vw,2rem); }
+
+  .form-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: clamp(1.25rem,4vw,2.5rem);
+    margin-bottom: 1.25rem;
+    box-shadow: 0 2px 12px rgba(11,31,58,0.06);
+  }
+  .form-section-title {
+    font-size: 13px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--gold);
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .photo-upload-area {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 2rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    background: var(--cream);
+  }
+  .photo-upload-area:hover { border-color: var(--gold); background: #FDF8F0; }
+  .photo-upload-area.has-photo { border-style: solid; border-color: var(--success); background: #F0FAF6; }
+  .photo-preview {
+    width: 100px; height: 100px; border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--gold);
+    display: none;
+    margin: 0 auto 0.75rem;
+  }
+  .photo-placeholder { width: 64px; height: 64px; margin: 0 auto 0.75rem; opacity: 0.3; }
+  .photo-upload-area p { font-size: 14px; color: var(--text-muted); }
+  .photo-upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid.full { grid-template-columns: 1fr; }
+  @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.span2 { grid-column: span 2; }
+  @media (max-width: 560px) { .form-group.span2 { grid-column: span 1; } }
+
+  label { font-size: 13px; font-weight: 500; color: var(--text); }
+  label span { color: var(--danger); margin-left: 2px; }
+
+  input[type="text"], input[type="tel"], input[type="email"], select, textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: var(--text);
+    background: var(--white);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--navy-light);
+    box-shadow: 0 0 0 3px rgba(43,79,126,0.12);
+  }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235A6E87' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; cursor: pointer; }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .form-hint { font-size: 12px; color: var(--text-muted); }
+
+  .btn-submit {
+    width: 100%;
+    background: var(--navy);
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 600;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 0.5rem;
+    letter-spacing: 0.02em;
+  }
+  .btn-submit:hover { background: var(--navy-mid); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(11,31,58,0.2); }
+  .btn-submit:active { transform: translateY(0); }
+
+  /* ── SUCCESS TOAST ── */
+  .toast {
+    display: none;
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--navy);
+    color: var(--white);
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    z-index: 200;
+    border-left: 4px solid var(--gold);
+    max-width: 300px;
+    animation: slideIn 0.3s ease;
+  }
+  .toast.show { display: flex; align-items: center; gap: 10px; }
+  @keyframes slideIn { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform:none; } }
+
+  /* ── SUCCESS SCREEN ── */
+  .success-screen {
+    display: none;
+    text-align: center;
+    padding: clamp(3rem,8vw,5rem) 1.5rem;
+  }
+  .success-screen.show { display: block; }
+  .success-icon {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: #E3F5EE;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.5rem;
+  }
+  .success-screen h2 { font-family: var(--font-display); font-size: 2rem; color: var(--navy); margin-bottom: 0.5rem; }
+  .success-screen p { color: var(--text-muted); margin-bottom: 2rem; }
+  .parent-chip {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 40px; padding: 8px 16px 8px 8px;
+    font-size: 14px; font-weight: 500;
+  }
+  .parent-chip img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+
+  /* ── ADMIN DASHBOARD ── */
+  .admin-page { background: #F4F6F9; min-height: calc(100vh - 64px); }
+  .admin-header {
+    background: var(--navy);
+    padding: clamp(1.5rem,4vw,2.5rem) clamp(1rem,5vw,2.5rem);
+    color: var(--white);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+  }
+  .admin-header h2 { font-family: var(--font-display); font-size: clamp(1.3rem,3vw,1.9rem); }
+  .admin-header p { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 2px; }
+  .admin-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .admin-actions button {
+    padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s;
+  }
+  .btn-ghost { background: rgba(255,255,255,0.1); color: var(--white); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.18); }
+  .btn-gold { background: var(--gold); color: var(--navy); font-weight: 600; }
+  .btn-gold:hover { background: var(--gold-light); }
+
+  .admin-body { padding: clamp(1rem,3vw,2rem) clamp(1rem,5vw,2.5rem); max-width: 1200px; margin: 0 auto; }
+
+  .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .stat-card {
+    background: var(--white); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+  }
+  .stat-card-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
+  .stat-card-value { font-family: var(--font-display); font-size: 2rem; color: var(--navy); line-height: 1.2; margin-top: 4px; }
+  .stat-card-delta { font-size: 12px; color: var(--success); margin-top: 2px; }
+
+  .admin-toolbar {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+  }
+  .search-box {
+    flex: 1; min-width: 200px;
+    position: relative;
+  }
+  .search-box svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+  .search-box input {
+    width: 100%; padding: 9px 14px 9px 38px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-family: var(--font-body); font-size: 14px; color: var(--text); background: var(--white); outline: none;
+  }
+  .search-box input:focus { border-color: var(--navy-light); box-shadow: 0 0 0 3px rgba(43,79,126,0.1); }
+
+  .filter-select {
+    padding: 9px 32px 9px 12px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-family: var(--font-body); font-size: 14px; color: var(--text); background: var(--white);
+    outline: none; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235A6E87' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+    -webkit-appearance: none;
+  }
+
+  .parent-table-wrap { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 600px; }
+  thead { background: #F7F9FC; }
+  th {
+    text-align: left; padding: 11px 16px;
+    font-size: 12px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #FAFBFD; }
+
+  .parent-cell { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--navy-light); color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; flex-shrink: 0;
+    overflow: hidden;
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .parent-name { font-weight: 500; color: var(--text); font-size: 14px; }
+  .parent-student { font-size: 12px; color: var(--text-muted); }
+
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 500;
+  }
+  .badge-present { background: #E3F5EE; color: #1B7E5A; }
+  .badge-absent { background: #FEE9E8; color: #C0392B; }
+  .badge-mother { background: #FDF3E3; color: #854F0B; }
+  .badge-father { background: #E3EFF9; color: #185FA5; }
+  .badge-guardian { background: #EEE8FA; color: #534AB7; }
+
+  .action-btn {
+    padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 500;
+    border: 1px solid var(--border); background: var(--white); cursor: pointer; color: var(--text);
+    transition: all 0.2s;
+  }
+  .action-btn:hover { background: var(--cream); border-color: var(--navy-light); }
+
+  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+  .empty-state svg { opacity: 0.3; margin-bottom: 1rem; }
+  .empty-state p { font-size: 15px; }
+
+  /* ── ATTENDANCE ── */
+  .event-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 2rem; }
+  .event-card {
+    background: var(--white); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1.25rem; position: relative; overflow: hidden;
+  }
+  .event-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--navy); }
+  .event-card.active::before { background: var(--gold); }
+  .event-name { font-weight: 600; font-size: 15px; color: var(--navy); margin-bottom: 4px; }
+  .event-date { font-size: 12px; color: var(--text-muted); margin-bottom: 1rem; }
+  .event-progress-bar { height: 6px; background: var(--cream-dark); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+  .event-progress-fill { height: 100%; background: var(--gold); border-radius: 3px; transition: width 0.4s; }
+  .event-count { font-size: 12px; color: var(--text-muted); }
+  .event-count strong { color: var(--text); }
+
+  .checkin-list { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+  .checkin-item {
+    display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .checkin-item:last-child { border-bottom: none; }
+  .checkin-info { flex: 1; }
+  .checkin-name { font-size: 14px; font-weight: 500; color: var(--text); }
+  .checkin-sub { font-size: 12px; color: var(--text-muted); }
+  .checkin-toggle {
+    width: 40px; height: 22px; border-radius: 11px;
+    background: var(--cream-dark); border: none; cursor: pointer;
+    position: relative; transition: background 0.2s; flex-shrink: 0;
+  }
+  .checkin-toggle::after {
+    content: ''; position: absolute;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--white); top: 3px; left: 3px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    transition: transform 0.2s;
+  }
+  .checkin-toggle.on { background: var(--success); }
+  .checkin-toggle.on::after { transform: translateX(18px); }
+
+  /* ── RESPONSIVE NAV HIDE ── */
+  @media (max-width: 680px) {
+    .nav-links { display: none; }
+    .hamburger { display: flex; }
+  }
+
+  /* ── PAGE NAV BUTTONS (between pages) ── */
+  .page-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+    padding: clamp(1rem,3vw,1.5rem) clamp(1rem,5vw,2.5rem);
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    max-width: 100%;
+  }
+  .page-nav-center { justify-content: center; }
+  .page-nav-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 14px; font-weight: 500;
+    cursor: pointer; border: none;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .page-nav-btn.prev {
+    background: var(--cream); color: var(--navy);
+    border: 1.5px solid var(--border);
+  }
+  .page-nav-btn.prev:hover { background: var(--cream-dark); border-color: var(--navy-light); }
+  .page-nav-btn.next {
+    background: var(--navy); color: var(--white);
+  }
+  .page-nav-btn.next:hover { background: var(--navy-mid); transform: translateY(-1px); }
+  .page-nav-btn.gold {
+    background: var(--gold); color: var(--navy); font-weight: 600;
+  }
+  .page-nav-btn.gold:hover { background: var(--gold-light); transform: translateY(-1px); }
+  .page-nav-label {
+    font-size: 12px; color: var(--text-muted);
+    text-align: center; flex: 1;
+    min-width: 120px;
+  }
+  .page-nav-label strong { display: block; color: var(--text); font-size: 13px; }
+
+  /* ── BOTTOM STICKY NAV (mobile) ── */
+  .bottom-nav {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--navy);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    z-index: 98;
+    padding: 0;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+  }
+  .bottom-nav-inner {
+    display: flex; align-items: stretch;
+    max-width: 480px; margin: 0 auto;
+  }
+  .bottom-nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; padding: 10px 4px 12px;
+    cursor: pointer; border: none; background: none;
+    color: rgba(255,255,255,0.5);
+    font-family: var(--font-body);
+    font-size: 10px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    transition: color 0.2s;
+    position: relative;
+  }
+  .bottom-nav-item svg { width: 20px; height: 20px; }
+  .bottom-nav-item.active { color: var(--gold-light); }
+  .bottom-nav-item.active::before {
+    content: ''; position: absolute; top: 0; left: 20%; right: 20%;
+    height: 2px; background: var(--gold); border-radius: 0 0 2px 2px;
+  }
+  .bottom-nav-item:hover { color: rgba(255,255,255,0.85); }
+
+  @media (max-width: 680px) {
+    .bottom-nav { display: block; }
+    body { padding-bottom: 64px; }
+  }
+
+  /* ── CLASS SEARCH INPUT ── */
+  .class-search-wrap {
+    position: relative; min-width: 160px;
+  }
+  .class-search-wrap svg {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    pointer-events: none;
+  }
+  .class-search-input {
+    width: 100%; padding: 9px 12px 9px 34px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-family: var(--font-body); font-size: 14px; color: var(--text);
+    background: var(--white); outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+  .class-search-input:focus {
+    border-color: var(--navy-light);
+    box-shadow: 0 0 0 3px rgba(43,79,126,0.10);
+  }
+  .class-search-input::placeholder { color: var(--text-muted); }
+
+  /* ── MODALS ── */
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; z-index: 300;
+    background: rgba(11,31,58,0.55); backdrop-filter: blur(3px);
+    align-items: center; justify-content: center; padding: 1rem;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--white); border-radius: var(--radius);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+    width: 100%; max-width: 480px;
+    animation: modalIn 0.22s cubic-bezier(.34,1.56,.64,1);
+    overflow: hidden;
+  }
+  @keyframes modalIn { from { opacity:0; transform:scale(0.92) translateY(12px); } to { opacity:1; transform:none; } }
+  .modal-header {
+    background: var(--navy); color: var(--white);
+    padding: 1.25rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-header h3 { font-family: var(--font-display); font-size: 1.2rem; }
+  .modal-close {
+    background: rgba(255,255,255,0.1); border: none; color: var(--white);
+    width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center; transition: background 0.2s;
+  }
+  .modal-close:hover { background: rgba(255,255,255,0.2); }
+  .modal-body { padding: 1.5rem; }
+  .modal-footer {
+    padding: 1rem 1.5rem; border-top: 1px solid var(--border);
+    display: flex; gap: 10px; justify-content: flex-end;
+  }
+  .modal-btn {
+    padding: 9px 20px; border-radius: var(--radius-sm);
+    font-family: var(--font-body); font-size: 14px; font-weight: 500;
+    cursor: pointer; border: none; transition: all 0.2s;
+  }
+  .modal-btn.cancel { background: var(--cream); color: var(--text); border: 1.5px solid var(--border); }
+  .modal-btn.cancel:hover { background: var(--cream-dark); }
+  .modal-btn.confirm { background: var(--navy); color: var(--white); }
+  .modal-btn.confirm:hover { background: var(--navy-mid); }
+
+  /* QR modal specific */
+  .qr-wrap {
+    text-align: center; padding: 1rem 0;
+  }
+  .qr-canvas-wrap {
+    display: inline-block;
+    background: var(--white); padding: 16px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    margin-bottom: 1rem;
+  }
+  .qr-url {
+    font-size: 12px; color: var(--text-muted);
+    word-break: break-all; background: var(--cream);
+    padding: 8px 12px; border-radius: 6px;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+  }
+  .qr-instructions {
+    font-size: 13px; color: var(--text-muted); line-height: 1.6;
+  }
+  .qr-instructions strong { color: var(--navy); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--navy);
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 13px;
+    margin-top: 2rem;
+  }
+  footer strong { color: var(--gold-light); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="#" onclick="showPage('home')">
+    <div class="nav-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B1F3A" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+    </div>
+    <span class="nav-brand-text">School<span>Connect</span></span>
+  </a>
+
+  <div class="nav-links">
+    <a href="#" onclick="showPage('home')" id="link-home" class="active">Home</a>
+    <a href="#" onclick="showPage('register')" id="link-register">Register</a>
+    <a href="#" onclick="showPage('attendance')" id="link-attendance">Attendance</a>
+    <a href="#" onclick="showPage('admin')" id="link-admin">Admin</a>
+    <a href="#" class="nav-btn" onclick="showPage('register')">Parent Sign-up</a>
+  </div>
+
+  <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#" onclick="showPage('home');toggleMenu()">Home</a>
+  <a href="#" onclick="showPage('register');toggleMenu()">Register as Parent</a>
+  <a href="#" onclick="showPage('attendance');toggleMenu()">Attendance</a>
+  <a href="#" onclick="showPage('admin');toggleMenu()">Admin Dashboard</a>
+  <a href="#" class="nav-btn" onclick="showPage('register');toggleMenu()">Parent Sign-up</a>
+</div>
+
+<!-- ════ HOME PAGE ════ -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <p class="hero-kicker">Digital School Registry</p>
+    <h1>Connecting <em>Parents</em> &amp; Schools Together</h1>
+    <p>A modern platform for registering parents, tracking attendance at PTA meetings, and logging school visitations — all in one place.</p>
+    <div class="hero-btns">
+      <a href="#" class="btn-primary" onclick="showPage('register')">Register as a Parent</a>
+      <a href="#" class="btn-outline" onclick="showPage('admin')">Admin Dashboard</a>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><span class="stat-num" id="statParents">0</span><span class="stat-label">Parents Registered</span></div>
+      <div class="stat"><span class="stat-num">3</span><span class="stat-label">Upcoming Events</span></div>
+      <div class="stat"><span class="stat-num">12</span><span class="stat-label">Visits This Week</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <p class="section-kicker">What We Offer</p>
+      <h2 class="section-title">Everything your school community needs</h2>
+      <p class="section-sub">One platform to manage parent records, track engagement, and build stronger school-home relationships.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="feat-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <h3>Parent Self-Registration</h3>
+        <p>Parents submit their own photo, name, phone number, and relationship to student directly from their phone.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B6D11" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <h3>PTA Attendance Tracking</h3>
+        <p>Mark parents present or absent at meetings and events with a single tap. Full history kept automatically.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#854F0B" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <h3>Visitation Log</h3>
+        <p>Record every school visit — date, time, reason, and check-out — giving you a full parental engagement history.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon purple"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <h3>Admin Dashboard</h3>
+        <p>School staff get a full view of all parents, filter by class, search by name, and export reports easily.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Home page nav -->
+  <div class="page-nav page-nav-center">
+    <button class="page-nav-btn gold" onclick="showPage('register')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Register a Parent
+    </button>
+    <button class="page-nav-btn next" onclick="showPage('attendance')">
+      View Attendance
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <button class="page-nav-btn next" onclick="showPage('admin')" style="background:var(--navy-light);">
+      Admin Dashboard
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ════ REGISTRATION PAGE ════ -->
+<div class="page" id="page-register">
+  <div class="reg-header">
+    <h2>Parent Registration</h2>
+    <p>Please fill in your details below. All information is kept secure and private.</p>
+  </div>
+  <div class="reg-body">
+
+    <div id="regForm">
+      <!-- Photo -->
+      <div class="form-card">
+        <div class="form-section-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 21v-2a5 5 0 0 1 10 0v2"/></svg>
+          Your Photo
+        </div>
+        <div class="photo-upload-area" id="photoArea" onclick="document.getElementById('photoInput').click()">
+          <img class="photo-preview" id="photoPreview" src="" alt="Preview" />
+          <svg class="photo-placeholder" id="photoPlaceholder" viewBox="0 0 24 24" fill="none" stroke="#0B1F3A" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+          <p>Tap to upload your photo</p>
+          <p style="font-size:12px;margin-top:4px;">JPG, PNG — max 5MB</p>
+          <input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" />
+        </div>
+      </div>
+
+      <!-- Personal Info -->
+      <div class="form-card">
+        <div class="form-section-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Personal Details
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>First name <span>*</span></label>
+            <input type="text" id="firstName" placeholder="e.g. Amara" />
+          </div>
+          <div class="form-group">
+            <label>Last name <span>*</span></label>
+            <input type="text" id="lastName" placeholder="e.g. Okafor" />
+          </div>
+          <div class="form-group span2">
+            <label>Phone number <span>*</span></label>
+            <input type="tel" id="phone" placeholder="e.g. +234 801 234 5678" />
+          </div>
+          <div class="form-group span2">
+            <label>Email address</label>
+            <input type="email" id="email" placeholder="e.g. amara@example.com" />
+            <span class="form-hint">Optional — for event reminders</span>
+          </div>
+          <div class="form-group span2">
+            <label>Relationship to student <span>*</span></label>
+            <select id="relationship">
+              <option value="">Select relationship...</option>
+              <option>Mother</option>
+              <option>Father</option>
+              <option>Guardian</option>
+              <option>Grandparent</option>
+              <option>Aunt / Uncle</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Student Info -->
+      <div class="form-card">
+        <div class="form-section-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          Student Information
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Student first name <span>*</span></label>
+            <input type="text" id="studentFirst" placeholder="e.g. Chidi" />
+          </div>
+          <div class="form-group">
+            <label>Student last name <span>*</span></label>
+            <input type="text" id="studentLast" placeholder="e.g. Okafor" />
+          </div>
+          <div class="form-group">
+            <label>Class / Year <span>*</span></label>
+            <select id="studentClass">
+              <option value="">Select class...</option>
+              <option>JSS 1</option><option>JSS 2</option><option>JSS 3</option>
+              <option>SS 1</option><option>SS 2</option><option>SS 3</option>
+              <option>Primary 1</option><option>Primary 2</option><option>Primary 3</option>
+              <option>Primary 4</option><option>Primary 5</option><option>Primary 6</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Student ID (if known)</label>
+            <input type="text" id="studentId" placeholder="e.g. STU-0042" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Address -->
+      <div class="form-card">
+        <div class="form-section-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Address (Optional)
+        </div>
+        <div class="form-grid full">
+          <div class="form-group">
+            <label>Home address</label>
+            <textarea id="address" placeholder="Street address, city..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-submit" onclick="submitRegistration()">Submit Registration</button>
+    </div>
+
+    <!-- Success Screen -->
+    <div class="success-screen" id="successScreen">
+      <div class="success-icon">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1B7E5A" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h2>Registration Complete!</h2>
+      <p>Your details have been saved. The school will contact you about upcoming events.</p>
+      <div class="parent-chip" id="parentChip">
+        <img id="chipPhoto" src="" alt="" />
+        <span id="chipName">Parent Name</span>
+      </div>
+      <br/><br/>
+      <button class="btn-primary" onclick="resetForm()">Register Another Parent</button>
+      <br/><br/>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <button class="page-nav-btn next" onclick="showPage('attendance')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Go to Attendance
+        </button>
+        <button class="page-nav-btn next" onclick="showPage('admin')" style="background:var(--navy-light);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          View Admin Panel
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Register page nav -->
+  <div class="page-nav">
+    <button class="page-nav-btn prev" onclick="showPage('home')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Home
+    </button>
+    <span class="page-nav-label"><strong>Register Parent</strong>Step 1 of 4</span>
+    <button class="page-nav-btn next" onclick="showPage('attendance')">
+      Attendance
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ════ ATTENDANCE PAGE ════ -->
+<div class="page" id="page-attendance">
+  <div class="admin-header">
+    <div>
+      <h2>Attendance Tracker</h2>
+      <p>Mark parent attendance for school events and meetings</p>
+    </div>
+    <div class="admin-actions">
+      <button class="btn-ghost" onclick="openQR()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:5px;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        QR Code
+      </button>
+      <button class="btn-ghost" onclick="exportAttendance()">Export CSV</button>
+      <button class="btn-gold" onclick="openAddEvent()">+ New Event</button>
+    </div>
+  </div>
+  <div class="admin-body">
+    <div class="event-cards" id="eventCards"></div>
+    <div style="margin-bottom:1rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+      <p style="font-size:14px;font-weight:600;color:var(--navy);">Parent check-in — <span id="activeEventName">Term 2 PTA Meeting</span></p>
+      <select class="filter-select" onchange="filterByEvent(this.value)" id="eventSelect"></select>
+    </div>
+    <div class="checkin-list" id="checkinList"></div>
+  </div>
+
+  <!-- Attendance page nav -->
+  <div class="page-nav">
+    <button class="page-nav-btn prev" onclick="showPage('register')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Register
+    </button>
+    <span class="page-nav-label"><strong>Attendance Tracker</strong>Step 3 of 4</span>
+    <button class="page-nav-btn next" onclick="showPage('admin')">
+      Admin Dashboard
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ════ ADMIN PAGE ════ -->
+<div class="page" id="page-admin">
+  <div class="admin-header">
+    <div>
+      <h2>Admin Dashboard</h2>
+      <p>All registered parents and their details</p>
+    </div>
+    <div class="admin-actions">
+      <button class="btn-ghost" onclick="openQR()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:5px;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        QR Code
+      </button>
+      <button class="btn-ghost" onclick="exportCSV()">Export CSV</button>
+      <button class="btn-gold" onclick="showPage('register')">+ Add Parent</button>
+    </div>
+  </div>
+  <div class="admin-body">
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-card-label">Total parents</div>
+        <div class="stat-card-value" id="adminTotal">0</div>
+        <div class="stat-card-delta">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Attended last PTA</div>
+        <div class="stat-card-value" id="adminAttended">0</div>
+        <div class="stat-card-delta">of registered parents</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Visits this month</div>
+        <div class="stat-card-value">7</div>
+        <div class="stat-card-delta">+2 from last month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Classes covered</div>
+        <div class="stat-card-value" id="adminClasses">0</div>
+        <div class="stat-card-delta">unique classes</div>
+      </div>
+    </div>
+
+    <div class="admin-toolbar">
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5A6E87" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search parent or student name..." oninput="filterAdmin(this.value)" id="adminSearch" />
+      </div>
+      <div class="class-search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5A6E87" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+        <input type="text" class="class-search-input" placeholder="Search by class..." oninput="filterClassText(this.value)" id="classTextSearch" />
+      </div>
+      <select class="filter-select" onchange="filterClass(this.value)" id="classFilter">
+        <option value="">All classes</option>
+      </select>
+      <select class="filter-select" onchange="filterRel(this.value)">
+        <option value="">All relationships</option>
+        <option>Mother</option><option>Father</option><option>Guardian</option><option>Grandparent</option>
+      </select>
+    </div>
+
+    <div class="parent-table-wrap">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Parent</th>
+              <th>Phone</th>
+              <th>Relationship</th>
+              <th>Student</th>
+              <th>Class</th>
+              <th>Last PTA</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="adminTable"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0B1F3A" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <p>No parents found matching your search.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin page nav -->
+  <div class="page-nav">
+    <button class="page-nav-btn prev" onclick="showPage('attendance')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Attendance
+    </button>
+    <span class="page-nav-label"><strong>Admin Dashboard</strong>Step 4 of 4</span>
+    <button class="page-nav-btn gold" onclick="showPage('register')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Add Parent
+    </button>
+  </div>
+</div>
+
+<footer>
+  &copy; 2025 <strong>SchoolConnect</strong> — Parent & Student Registry System
+</footer>
+
+<!-- ── BOTTOM NAV (mobile) ── -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="bottom-nav-inner">
+    <button class="bottom-nav-item active" id="bnav-home" onclick="showPage('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </button>
+    <button class="bottom-nav-item" id="bnav-register" onclick="showPage('register')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Register
+    </button>
+    <button class="bottom-nav-item" id="bnav-attendance" onclick="showPage('attendance')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Attendance
+    </button>
+    <button class="bottom-nav-item" id="bnav-admin" onclick="showPage('admin')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Admin
+    </button>
+  </div>
+</nav>
+
+<!-- ══ ADD EVENT MODAL ══ -->
+<div class="modal-backdrop" id="addEventModal" onclick="closeModalOnBackdrop(event,'addEventModal')">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>New Event</h3>
+      <button class="modal-close" onclick="closeModal('addEventModal')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label>Event name <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="evName" placeholder="e.g. Term 3 PTA Meeting" />
+      </div>
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label>Event type</label>
+        <select id="evType">
+          <option value="PTA Meeting">PTA Meeting</option>
+          <option value="Sports Day">Sports Day</option>
+          <option value="End of Term">End of Term Ceremony</option>
+          <option value="Open Day">Open Day</option>
+          <option value="Prize Giving">Prize Giving</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-grid" style="gap:12px;">
+        <div class="form-group">
+          <label>Date <span style="color:var(--danger)">*</span></label>
+          <input type="date" id="evDate" />
+        </div>
+        <div class="form-group">
+          <label>Time</label>
+          <input type="time" id="evTime" value="10:00" />
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:1rem;">
+        <label>Venue / Location</label>
+        <input type="text" id="evVenue" placeholder="e.g. School Hall" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn cancel" onclick="closeModal('addEventModal')">Cancel</button>
+      <button class="modal-btn confirm" onclick="saveEvent()">Create Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ QR CODE MODAL ══ -->
+<div class="modal-backdrop" id="qrModal" onclick="closeModalOnBackdrop(event,'qrModal')">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h3>Parent Registration QR Code</h3>
+      <button class="modal-close" onclick="closeModal('qrModal')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="qr-wrap">
+        <div class="qr-canvas-wrap">
+          <div id="qrTarget" style="display:inline-block;"></div>
+        </div>
+        <div class="qr-url" id="qrUrl"></div>
+        <p class="qr-instructions">
+          <strong>Print or display this QR code</strong> at the school entrance, notice board, or during events.<br><br>
+          Parents scan it with their phone camera to open the registration form directly.
+        </p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn cancel" onclick="closeModal('qrModal')">Close</button>
+      <button class="modal-btn confirm" onclick="downloadQR()">Download QR</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4993A" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toastMsg">Done!</span>
+</div>
+
+<script>
+// ── DATA STORE ──
+let parents = [];
+let events = [
+  { id: 1, name: 'Term 2 PTA Meeting', date: 'May 15, 2025', total: 0, attended: [] },
+  { id: 2, name: 'Sports Day Parents Briefing', date: 'May 28, 2025', total: 0, attended: [] },
+  { id: 3, name: 'End of Term Ceremony', date: 'Jun 20, 2025', total: 0, attended: [] },
+];
+let currentEventId = 1;
+let photoDataUrl = '';
+let filterQuery = '', filterClassVal = '', filterRelVal = '', filterClassText_val = '';
+
+// ── NAV ──
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-links a[id^="link-"]').forEach(a => a.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const link = document.getElementById('link-' + name);
+  if (link) link.classList.add('active');
+  const blink = document.getElementById('bnav-' + name);
+  if (blink) blink.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (name === 'admin') renderAdmin();
+  if (name === 'attendance') renderAttendance();
+  if (name === 'home') updateHomeStats();
+}
+
+function toggleMenu() {
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+
+// ── PHOTO ──
+function handlePhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    photoDataUrl = ev.target.result;
+    const preview = document.getElementById('photoPreview');
+    const placeholder = document.getElementById('photoPlaceholder');
+    const area = document.getElementById('photoArea');
+    preview.src = photoDataUrl;
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+    area.classList.add('has-photo');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── REGISTRATION ──
+function submitRegistration() {
+  const firstName = document.getElementById('firstName').value.trim();
+  const lastName = document.getElementById('lastName').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const rel = document.getElementById('relationship').value;
+  const studentFirst = document.getElementById('studentFirst').value.trim();
+  const studentLast = document.getElementById('studentLast').value.trim();
+  const cls = document.getElementById('studentClass').value;
+
+  if (!firstName || !lastName || !phone || !rel || !studentFirst || !studentLast || !cls) {
+    showToast('Please fill in all required fields.');
+    return;
+  }
+
+  const parent = {
+    id: Date.now(),
+    firstName, lastName, phone,
+    email: document.getElementById('email').value.trim(),
+    relationship: rel,
+    studentFirst, studentLast,
+    studentClass: cls,
+    studentId: document.getElementById('studentId').value.trim(),
+    address: document.getElementById('address').value.trim(),
+    photo: photoDataUrl,
+    registeredAt: new Date().toLocaleDateString('en-GB'),
+    lastPTA: 'Not yet'
+  };
+
+  parents.push(parent);
+  events.forEach(ev => ev.total = parents.length);
+
+  // show success
+  document.getElementById('regForm').style.display = 'none';
+  const ss = document.getElementById('successScreen');
+  ss.classList.add('show');
+  document.getElementById('chipName').textContent = `${firstName} ${lastName}`;
+  if (photoDataUrl) {
+    document.getElementById('chipPhoto').src = photoDataUrl;
+    document.getElementById('chipPhoto').style.display = 'block';
+  }
+  updateHomeStats();
+  showToast(`${firstName} registered successfully!`);
+}
+
+function resetForm() {
+  ['firstName','lastName','phone','email','studentFirst','studentLast','studentId','address'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('relationship').value = '';
+  document.getElementById('studentClass').value = '';
+  photoDataUrl = '';
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('photoPreview').src = '';
+  document.getElementById('photoPlaceholder').style.display = 'block';
+  document.getElementById('photoArea').classList.remove('has-photo');
+  document.getElementById('regForm').style.display = 'block';
+  document.getElementById('successScreen').classList.remove('show');
+}
+
+// ── ADMIN TABLE ──
+function renderAdmin() {
+  updateHomeStats();
+  const search = (filterQuery || '').toLowerCase();
+  let filtered = parents.filter(p => {
+    const name = `${p.firstName} ${p.lastName} ${p.studentFirst} ${p.studentLast}`.toLowerCase();
+    const classMatch = (!filterClassVal || p.studentClass === filterClassVal)
+      && (!filterClassText_val || p.studentClass.toLowerCase().includes(filterClassText_val.toLowerCase()));
+    return name.includes(search) && classMatch && (!filterRelVal || p.relationship === filterRelVal);
+  });
+
+  const tbody = document.getElementById('adminTable');
+  const empty = document.getElementById('emptyState');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+  } else {
+    empty.style.display = 'none';
+    tbody.innerHTML = filtered.map(p => `
+      <tr>
+        <td>
+          <div class="parent-cell">
+            <div class="avatar">${p.photo ? `<img src="${p.photo}" alt="">` : initials(p.firstName, p.lastName)}</div>
+            <div>
+              <div class="parent-name">${p.firstName} ${p.lastName}</div>
+              <div class="parent-student">Reg: ${p.registeredAt}</div>
+            </div>
+          </div>
+        </td>
+        <td>${p.phone}</td>
+        <td><span class="badge badge-${p.relationship.toLowerCase().replace(' / ','-').split('/')[0].trim()}">${p.relationship}</span></td>
+        <td>${p.studentFirst} ${p.studentLast}</td>
+        <td>${p.studentClass}</td>
+        <td><span class="badge ${p.lastPTA === 'Not yet' ? 'badge-absent' : 'badge-present'}">${p.lastPTA}</span></td>
+        <td><button class="action-btn" onclick="viewParent(${p.id})">View</button></td>
+      </tr>
+    `).join('');
+  }
+
+  document.getElementById('adminTotal').textContent = parents.length;
+  document.getElementById('adminAttended').textContent = parents.filter(p => p.lastPTA !== 'Not yet').length;
+  const classes = [...new Set(parents.map(p => p.studentClass))].filter(Boolean);
+  document.getElementById('adminClasses').textContent = classes.length;
+
+  // populate class filter
+  const cf = document.getElementById('classFilter');
+  const current = cf.value;
+  cf.innerHTML = '<option value="">All classes</option>' + classes.map(c => `<option ${c === current ? 'selected' : ''}>${c}</option>`).join('');
+}
+
+function filterAdmin(v) { filterQuery = v; renderAdmin(); }
+function filterClass(v) { filterClassVal = v; filterClassText_val = ''; const ct = document.getElementById('classTextSearch'); if(ct) ct.value = ''; renderAdmin(); }
+function filterClassText(v) { filterClassText_val = v; filterClassVal = ''; const cf = document.getElementById('classFilter'); if(cf) cf.value = ''; renderAdmin(); }
+function filterRel(v) { filterRelVal = v; renderAdmin(); }
+function initials(f, l) { return (f[0] || '') + (l[0] || ''); }
+
+function viewParent(id) {
+  const p = parents.find(x => x.id === id);
+  if (!p) return;
+  alert(`Parent: ${p.firstName} ${p.lastName}\nPhone: ${p.phone}\nRelationship: ${p.relationship}\nStudent: ${p.studentFirst} ${p.studentLast} (${p.studentClass})\nEmail: ${p.email || 'N/A'}\nAddress: ${p.address || 'N/A'}`);
+}
+
+function exportCSV() {
+  if (!parents.length) { showToast('No data to export yet.'); return; }
+  const header = 'First Name,Last Name,Phone,Email,Relationship,Student,Class,Last PTA\n';
+  const rows = parents.map(p => `${p.firstName},${p.lastName},${p.phone},${p.email},${p.relationship},${p.studentFirst} ${p.studentLast},${p.studentClass},${p.lastPTA}`).join('\n');
+  const blob = new Blob([header + rows], { type: 'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'parents.csv'; a.click();
+  showToast('CSV downloaded!');
+}
+
+// ── ATTENDANCE ──
+function renderAttendance() {
+  events.forEach(ev => ev.total = parents.length);
+
+  const evCards = document.getElementById('eventCards');
+  evCards.innerHTML = events.map(ev => {
+    const pct = ev.total ? Math.round((ev.attended.length / ev.total) * 100) : 0;
+    return `
+    <div class="event-card ${ev.id === currentEventId ? 'active' : ''}" onclick="selectEvent(${ev.id})" style="cursor:pointer;">
+      <div class="event-name">${ev.name}</div>
+      <div class="event-date">${ev.date}</div>
+      <div class="event-progress-bar"><div class="event-progress-fill" style="width:${pct}%"></div></div>
+      <div class="event-count"><strong>${ev.attended.length}</strong> of ${ev.total || '—'} parents checked in (${pct}%)</div>
+    </div>`;
+  }).join('');
+
+  const evSelect = document.getElementById('eventSelect');
+  evSelect.innerHTML = events.map(ev => `<option value="${ev.id}" ${ev.id === currentEventId ? 'selected' : ''}>${ev.name}</option>`).join('');
+
+  renderCheckin();
+}
+
+function selectEvent(id) {
+  currentEventId = id;
+  document.getElementById('activeEventName').textContent = events.find(e => e.id === id)?.name || '';
+  renderAttendance();
+}
+
+function filterByEvent(id) {
+  currentEventId = parseInt(id);
+  document.getElementById('activeEventName').textContent = events.find(e => e.id === currentEventId)?.name || '';
+  renderAttendance();
+}
+
+function renderCheckin() {
+  const ev = events.find(e => e.id === currentEventId);
+  const list = document.getElementById('checkinList');
+  if (!parents.length) {
+    list.innerHTML = '<div class="empty-state"><p>No parents registered yet. <a href="#" onclick="showPage(\'register\')">Register one now.</a></p></div>';
+    return;
+  }
+  list.innerHTML = parents.map(p => {
+    const present = ev && ev.attended.includes(p.id);
+    return `
+    <div class="checkin-item">
+      <div class="avatar">${p.photo ? `<img src="${p.photo}" alt="">` : initials(p.firstName, p.lastName)}</div>
+      <div class="checkin-info">
+        <div class="checkin-name">${p.firstName} ${p.lastName}</div>
+        <div class="checkin-sub">${p.studentFirst} ${p.studentLast} · ${p.studentClass} · ${p.relationship}</div>
+      </div>
+      <button class="checkin-toggle ${present ? 'on' : ''}" onclick="toggleAttend(${p.id})" title="${present ? 'Mark absent' : 'Mark present'}"></button>
+    </div>`;
+  }).join('');
+}
+
+function toggleAttend(parentId) {
+  const ev = events.find(e => e.id === currentEventId);
+  if (!ev) return;
+  const idx = ev.attended.indexOf(parentId);
+  if (idx === -1) {
+    ev.attended.push(parentId);
+    const p = parents.find(x => x.id === parentId);
+    if (p) p.lastPTA = ev.name;
+    showToast('Marked present');
+  } else {
+    ev.attended.splice(idx, 1);
+    showToast('Marked absent');
+  }
+  renderAttendance();
+}
+
+function openAddEvent() {
+  // set today as default date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('evDate').value = today;
+  document.getElementById('evName').value = '';
+  document.getElementById('evVenue').value = '';
+  document.getElementById('evType').value = 'PTA Meeting';
+  document.getElementById('evTime').value = '10:00';
+  openModal('addEventModal');
+}
+
+function saveEvent() {
+  const name = document.getElementById('evName').value.trim();
+  const type = document.getElementById('evType').value;
+  const dateRaw = document.getElementById('evDate').value;
+  const time = document.getElementById('evTime').value;
+  const venue = document.getElementById('evVenue').value.trim();
+
+  if (!name) { showToast('Please enter an event name.'); return; }
+  if (!dateRaw) { showToast('Please select a date.'); return; }
+
+  const dateObj = new Date(dateRaw);
+  const dateStr = dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const label = time ? `${dateStr} at ${time}` : dateStr;
+
+  events.push({
+    id: Date.now(),
+    name,
+    type,
+    date: label,
+    venue: venue || 'School premises',
+    total: parents.length,
+    attended: []
+  });
+
+  closeModal('addEventModal');
+  renderAttendance();
+  showToast(`"${name}" event created!`);
+}
+
+// ── QR CODE ──
+function openQR() {
+  const regUrl = window.location.href.split('?')[0];
+  document.getElementById('qrUrl').textContent = regUrl + ' → Register page';
+  openModal('qrModal');
+  setTimeout(() => drawQR(regUrl), 80);
+}
+
+function drawQR(url) {
+  const target = document.getElementById('qrTarget');
+  target.innerHTML = '';
+  if (typeof QRCode !== 'undefined') {
+    new QRCode(target, {
+      text: url,
+      width: 200,
+      height: 200,
+      colorDark: '#0B1F3A',
+      colorLight: '#FFFFFF',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } else {
+    target.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:2rem;">QR library loading, please try again in a moment.</p>';
+  }
+}
+
+function downloadQR() {
+  const target = document.getElementById('qrTarget');
+  const img = target.querySelector('img');
+  const canvas = target.querySelector('canvas');
+  if (canvas) {
+    const a = document.createElement('a');
+    a.download = 'schoolconnect-register-qr.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+    showToast('QR code downloaded!');
+  } else if (img) {
+    const a = document.createElement('a');
+    a.download = 'schoolconnect-register-qr.png';
+    a.href = img.src;
+    a.click();
+    showToast('QR code downloaded!');
+  } else {
+    showToast('QR not ready yet, try again.');
+  }
+}
+
+// ── MODAL UTILS ──
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeModalOnBackdrop(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+
+function exportAttendance() {
+  const ev = events.find(e => e.id === currentEventId);
+  if (!ev) return;
+  const header = 'Parent,Phone,Student,Class,Attended\n';
+  const rows = parents.map(p => `${p.firstName} ${p.lastName},${p.phone},${p.studentFirst} ${p.studentLast},${p.studentClass},${ev.attended.includes(p.id) ? 'Yes' : 'No'}`).join('\n');
+  const blob = new Blob([header + rows], { type: 'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `attendance-${ev.name.replace(/\s+/g,'-')}.csv`; a.click();
+  showToast('Attendance exported!');
+}
+
+// ── UTILS ──
+function updateHomeStats() {
+  document.getElementById('statParents').textContent = parents.length;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</body>
+</html>
