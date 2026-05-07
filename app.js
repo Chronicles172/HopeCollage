@@ -732,20 +732,101 @@ function exportCSV() {
   a.href = URL.createObjectURL(new Blob([h+rows],{type:'text/csv'})); a.download = 'parents.csv'; a.click();
   showToast('CSV downloaded!', 'success');
 }
-
 function loadAdminEvents() {
+
   apiFetch('actions/fetch.php?action=events').then(function(r) {
+
     if (!r.success) return;
+
     allEvents = r.data;
-    var el = document.getElementById('adminEventCards'); if (!el) return;
-    if (!allEvents.length) { el.innerHTML = '<p style="color:var(--text-muted)">No events yet.</p>'; return; }
+
+    var el = document.getElementById('adminEventCards');
+
+    if (!el) return;
+
+    // No events
+    if (!allEvents.length) {
+      el.innerHTML = '<p style="color:var(--text-muted)">No events yet.</p>';
+      return;
+    }
+
     el.innerHTML = allEvents.map(function(e) {
-      return '<div class="ev-card"><div class="ev-type-badge">'+e.event_type+'</div><div class="ev-name">'+e.name+'</div>' +
-        '<div class="ev-meta"><span>&#128197; '+fmtDate(e.event_date)+(e.event_time?' at '+fmtTime(e.event_time):'')+
-        '</span><span>&#128205; '+(e.venue||'TBD')+'</span>'+(e.description?'<span>'+e.description+'</span>':'')+
-        '</div></div>';
+
+      return `
+        <div class="ev-card" style="position:relative">
+
+          <!-- DELETE BUTTON -->
+          <button
+            onclick="deleteEvent(${e.id}, '${e.name.replace(/'/g, "\\'")}')"
+            style="
+              position:absolute;
+              top:12px;
+              right:12px;
+              width:32px;
+              height:32px;
+              border:none;
+              border-radius:8px;
+              background:#dc2626;
+              color:white;
+              font-size:18px;
+              font-weight:bold;
+              cursor:pointer;
+              z-index:100;
+            "
+            title="Delete Event"
+          >
+            ×
+          </button>
+
+          <div class="ev-type-badge">${e.event_type}</div>
+
+          <div class="ev-name">${e.name}</div>
+
+          <div class="ev-meta">
+            <span>📅 ${fmtDate(e.event_date)}
+              ${e.event_time ? ' at ' + fmtTime(e.event_time) : ''}
+            </span>
+
+            <span>📍 ${e.venue || 'TBD'}</span>
+
+            ${e.description ? `<span>${e.description}</span>` : ''}
+          </div>
+
+        </div>
+      `;
+
     }).join('');
+
   });
+
+}
+function deleteEvent(eventId, eventName) {
+
+  if (!confirm('Delete "' + eventName + '"?')) {
+    return;
+  }
+
+  var fd = new FormData();
+
+  fd.append('action', 'delete_event');
+  fd.append('event_id', eventId);
+
+  apiPost('actions/insert.php', fd).then(function(r) {
+
+    if (r.success) {
+
+      showToast('Event deleted successfully', 'success');
+
+      loadAdminEvents();
+
+    } else {
+
+      showToast(r.message || 'Delete failed', 'error');
+
+    }
+
+  });
+
 }
 
 function renderAdminEventsPreview() {
@@ -774,6 +855,27 @@ function saveEvent() {
   apiPost('actions/insert.php',fd).then(function(r) {
     if (r.success) { closeModal('addEventModal'); showToast('Event created!','success'); loadAdminData(); loadAdminEvents(); }
     else showToast(r.message,'error');
+  });
+}
+
+function deleteEvent(eventId, eventName) {
+  if (!confirm('Are you sure you want to delete "' + eventName + '"?\n\nThis will also remove all attendance records associated with this event.')) {
+    return;
+  }
+  
+  var fd = new FormData();
+  fd.append('action', 'delete_event');
+  fd.append('event_id', eventId);
+  
+  apiPost('actions/insert.php', fd).then(function(r) {
+    if (r.success) {
+      showToast(r.message, 'success');
+      loadAdminData();
+      loadAdminEvents();
+      loadAdminCheckin(); // Refresh attendance list if on that tab
+    } else {
+      showToast(r.message, 'error');
+    }
   });
 }
 
