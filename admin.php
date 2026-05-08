@@ -6,10 +6,6 @@
 require_once 'includes/layout.php';
 layout_head('Admin');
 layout_nav('admin');
-
-session_start();
-$isLoggedIn = isset($_SESSION['admin_id']);
-$adminName  = $_SESSION['admin_name'] ?? '';
 ?>
 
 <!-- ── Admin Login Overlay ────────────────────────────────── -->
@@ -91,7 +87,7 @@ $adminName  = $_SESSION['admin_name'] ?? '';
         </div>
         <div class="table-wrap">
           <div class="table-toolbar">
-            <input type="text" id="searchParents" placeholder="Search student name or ID…"
+            <input type="text" id="searchParents" placeholder="Search student name, ID, or parent name…"
               oninput="renderParentsTable()" style="flex:1;min-width:160px"/>
             <select id="filterClass" onchange="renderParentsTable()" style="min-width:130px">
               <option value="">All Classes</option>
@@ -105,11 +101,8 @@ $adminName  = $_SESSION['admin_name'] ?? '';
           <div style="overflow-x:auto">
             <table>
               <thead><tr>
-                <th>Parent</th><th>Number</th>
-                <th>Relationship</th>
-				<th>Wards</th>
-				<th>Class</th>
-				<th>Registered</th><th></th>
+                <th>Student</th><th>Class</th>
+                <th colspan="3">Parents / Guardians</th><th>Registered</th><th></th>
               </tr></thead>
               <tbody id="parentsTableBody"></tbody>
             </table>
@@ -211,6 +204,17 @@ $adminName  = $_SESSION['admin_name'] ?? '';
   </div>
 </div>
 
+<div class="modal-overlay" id="studentDetailModal" onclick="closeModalOnBackdrop(event,'studentDetailModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('studentDetailModal')">✕</button>
+    <h3>Student Details</h3>
+    <div id="studentDetailContent"></div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="closeModal('studentDetailModal')">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="qrModal" onclick="closeModalOnBackdrop(event,'qrModal')">
   <div class="modal" style="text-align:center">
     <button class="modal-close" onclick="closeModal('qrModal')">✕</button>
@@ -228,26 +232,9 @@ $adminName  = $_SESSION['admin_name'] ?? '';
 </div>
 
 <script>
-const ADMIN_LOGGED_IN = <?php echo $isLoggedIn ? 'true' : 'false'; ?>;
-const ADMIN_NAME = "<?php echo htmlspecialchars($adminName); ?>";
-</script>
-
-<script>
 // Show login overlay immediately; hide dashboard until authenticated
 document.addEventListener('DOMContentLoaded', function() {
-  if (ADMIN_LOGGED_IN) {
-    // ✅ Already logged in → show dashboard
-    document.getElementById('adminLoginOverlay').style.display = 'none';
-    document.getElementById('adminDashboard').style.display    = 'block';
-
-    var lbl = document.getElementById('adminNameLabel');
-    if (lbl) lbl.textContent = ADMIN_NAME;
-
-    loadAdminData();
-  } else {
-    // ❌ Not logged in → show login
-    document.getElementById('adminLoginOverlay').style.display = 'flex';
-  }
+  document.getElementById('adminLoginOverlay').style.display = 'flex';
 });
 
 // Override doLogin to show/hide the right elements on this page
@@ -284,6 +271,17 @@ function openQR() {
   document.getElementById('qrUrl').textContent = url;
   openModal('qrModal');
   setTimeout(function(){ drawQR(url); }, 80);
+}
+
+function deleteEvent(eventId, eventName) {
+  // Shows confirmation dialog with event name
+  if (!confirm('Are you sure you want to delete "' + eventName + '"?\n\n' +
+              'This will also remove all attendance records...')) {
+    return;
+  }
+  
+  // Sends delete request to backend
+  // Refreshes all admin data on success
 }
 </script>
 
