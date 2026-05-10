@@ -87,7 +87,7 @@ layout_nav('admin');
         </div>
         <div class="table-wrap">
           <div class="table-toolbar">
-            <input type="text" id="searchParents" placeholder="Search student name, ID, or parent name…"
+            <input type="text" id="searchParents" placeholder="Search name or phone…"
               oninput="renderParentsTable()" style="flex:1;min-width:160px"/>
             <select id="filterClass" onchange="renderParentsTable()" style="min-width:130px">
               <option value="">All Classes</option>
@@ -271,17 +271,6 @@ function openQR() {
   document.getElementById('qrUrl').textContent = url;
   openModal('qrModal');
   setTimeout(function(){ drawQR(url); }, 80);
-}
-
-function deleteEvent(eventId, eventName) {
-  // Shows confirmation dialog with event name
-  if (!confirm('Are you sure you want to delete "' + eventName + '"?\n\n' +
-              'This will also remove all attendance records...')) {
-    return;
-  }
-  
-  // Sends delete request to backend
-  // Refreshes all admin data on success
 }
 </script>
 

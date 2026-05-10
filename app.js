@@ -559,12 +559,11 @@ function renderParentsTable() {
 
     rows += '<tr>' +
       '<td><div class="parent-cell">' + wa + '<div><div style="font-weight:600">' + w.first_name + ' ' + w.last_name + '</div>' +
-        (w.student_id_no ? '<div style="font-size:11px;color:var(--text-muted)">ID: ' + w.student_id_no + '</div>' : '') + 
-        '</div><button onclick="viewStudent(' + w.id + ')" style="background:var(--navy);border:none;color:white;cursor:pointer;font-size:11px;padding:4px 10px;border-radius:4px;margin-left:8px" title="View Student Details">👁 View</button></div></td>' +
+        (w.student_id_no ? '<div style="font-size:11px;color:var(--text-muted)">ID: ' + w.student_id_no + '</div>' : '') + '</div></div></td>' +
       '<td>' + (w.student_class||'&mdash;') + '</td>' +
       '<td colspan="3"><div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">' + parentNames + '</div></td>' +
       '<td>' + fmtDate(((group.parents[0]||{}).registered_at||'').split(' ')[0]) + '</td>' +
-      '<td></td>' +
+      '<td><button onclick="viewStudent(' + w.id + ')" style="background:var(--navy);border:none;color:white;cursor:pointer;font-size:11px;padding:4px 10px;border-radius:4px" title="View Student Details">👁 View</button></td>' +
     '</tr>';
   });
 
@@ -659,37 +658,37 @@ function viewStudent(studentId) {
   // Build parents list
   var parentsHtml = studentParents.length > 0 ? studentParents.map(function(p) {
     return '<div style="background:var(--cream);border-radius:8px;padding:.75rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:10px">' +
-      (p.photo_path ? '<img src="' + p.photo_path + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover"/>'
-        : '<div style="width:36px;height:36px;border-radius:50%;background:var(--navy-light);color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">' + initials(p.first_name, p.last_name) + '</div>') +
+      (p.photo_path ? '<img src="' + p.photo_path + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--border)"/>'
+        : '<div style="width:36px;height:36px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">' + initials(p.first_name, p.last_name) + '</div>') +
       '<div style="flex:1"><div style="font-weight:600;font-size:.9rem">' + p.first_name + ' ' + p.last_name + '</div>' +
-        '<div style="font-size:12px;color:var(--text-muted)">' + p.relationship + ' · ' + (p.phone||'N/A') + '</div></div>' +
+        '<div style="font-size:12px;color:var(--text-muted)">' + (p.relationship||'Guardian') + (p.phone ? ' · ' + p.phone : '') + '</div></div>' +
     '</div>';
   }).join('') : '<p style="color:var(--text-muted);font-size:13px">No parent/guardian recorded.</p>';
   
   // Build student detail modal content
-  var content = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:1rem">' +
-    (student.photo_path ? '<img src="' + student.photo_path + '" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid var(--gold)"/>'
-      : '<div style="width:64px;height:64px;border-radius:50%;background:var(--gold);color:white;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700">' + initials(student.first_name, student.last_name) + '</div>') +
-    '<div><strong style="font-size:1.1rem">' + student.first_name + ' ' + student.last_name + '</strong><br/>' +
-      '<span style="font-size:13px;color:var(--text-muted)">' + (student.student_class || 'No class') + '</span>' +
+  var content = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid var(--border)">' +
+    (student.photo_path ? '<img src="' + student.photo_path + '" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:4px solid var(--gold)"/>'
+      : '<div style="width:80px;height:80px;border-radius:50%;background:var(--gold);color:white;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:700">' + initials(student.first_name, student.last_name) + '</div>') +
+    '<div><div style="font-size:1.3rem;font-weight:700;color:var(--navy);margin-bottom:4px">' + student.first_name + ' ' + student.last_name + '</div>' +
+      '<div style="font-size:14px;color:var(--text-muted)">' + (student.student_class || 'No class assigned') + '</div>' +
     '</div>' +
   '</div>' +
-  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">' +
-    '<div><span style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">STUDENT ID</span>' +
-      '<span style="font-size:14px">' + (student.student_id_no || 'N/A') + '</span></div>' +
-    '<div><span style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">CLASS</span>' +
-      '<span style="font-size:14px">' + (student.student_class || 'N/A') + '</span></div>' +
-    '<div><span style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">HOUSE</span>' +
-      '<span style="font-size:14px">' + (student.house || 'N/A') + '</span></div>' +
-    '<div><span style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">GENDER</span>' +
-      '<span style="font-size:14px">' + (student.gender || 'N/A') + '</span></div>' +
-    '<div><span style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">DATE OF BIRTH</span>' +
-      '<span style="font-size:14px">' + (student.date_of_birth ? fmtDate(student.date_of_birth) : 'N/A') + '</span></div>' +
-    '<div><span style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">NHIS ID</span>' +
-      '<span style="font-size:14px">' + (student.nhis_id || 'N/A') + '</span></div>' +
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;letter-spacing:.05em">STUDENT ID</div>' +
+      '<div style="font-size:15px;font-weight:600">' + (student.student_id_no || 'Not assigned') + '</div></div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;letter-spacing:.05em">CLASS</div>' +
+      '<div style="font-size:15px;font-weight:600">' + (student.student_class || 'Not assigned') + '</div></div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;letter-spacing:.05em">HOUSE</div>' +
+      '<div style="font-size:15px;font-weight:600">' + (student.house || 'Not assigned') + '</div></div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;letter-spacing:.05em">GENDER</div>' +
+      '<div style="font-size:15px;font-weight:600">' + (student.gender || 'Not specified') + '</div></div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;letter-spacing:.05em">DATE OF BIRTH</div>' +
+      '<div style="font-size:15px;font-weight:600">' + (student.date_of_birth ? fmtDate(student.date_of_birth) : 'Not specified') + '</div></div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;letter-spacing:.05em">NHIS ID</div>' +
+      '<div style="font-size:15px;font-weight:600">' + (student.nhis_id || 'Not specified') + '</div></div>' +
   '</div>' +
-  '<div style="border-top:1.5px solid var(--border);padding-top:1rem;margin-top:1rem">' +
-    '<div style="font-size:12px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:.75rem;letter-spacing:.07em">👥 PARENTS / GUARDIANS (' + studentParents.length + ')</div>' +
+  '<div style="border-top:1.5px solid var(--border);padding-top:1rem">' +
+    '<div style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:.75rem;letter-spacing:.05em">👥 PARENTS / GUARDIANS (' + studentParents.length + ')</div>' +
     parentsHtml +
   '</div>';
   
@@ -922,26 +921,6 @@ function saveEvent() {
   });
 }
 
-function deleteEvent(eventId, eventName) {
-  if (!confirm('Are you sure you want to delete "' + eventName + '"?\n\nThis will also remove all attendance records associated with this event.')) {
-    return;
-  }
-  
-  var fd = new FormData();
-  fd.append('action', 'delete_event');
-  fd.append('event_id', eventId);
-  
-  apiPost('actions/insert.php', fd).then(function(r) {
-    if (r.success) {
-      showToast(r.message, 'success');
-      loadAdminData();
-      loadAdminEvents();
-      loadAdminCheckin(); // Refresh attendance list if on that tab
-    } else {
-      showToast(r.message, 'error');
-    }
-  });
-}
 
 function loadAdminCheckin() {
   apiFetch('actions/fetch.php?action=events').then(function(r) {
