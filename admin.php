@@ -4,16 +4,12 @@
 // URL: /admin.php
 // ============================================================
 require_once 'includes/layout.php';
+session_start(); // ← Single session_start() for this page
 layout_head('Admin');
 layout_nav('admin');
 ?>
 
 <!-- ── Admin Login Overlay ────────────────────────────────── -->
-<!--
-  Shown immediately on load if not authenticated.
-  On success, JS hides it and shows the dashboard.
-  Credentials: username: admin  |  password: Admin@1234
--->
 <div class="login-overlay" id="adminLoginOverlay">
   <div class="login-box">
     <h2>Admin Login</h2>
@@ -149,7 +145,7 @@ layout_nav('admin');
   </div>
 </div>
 
-<!-- ── Modals (only needed on admin page) ─────────────────── -->
+<!-- ── Modals ─────────────────────────────────────────────── -->
 <div class="modal-overlay" id="addEventModal" onclick="closeModalOnBackdrop(event,'addEventModal')">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('addEventModal')">✕</button>
@@ -204,17 +200,6 @@ layout_nav('admin');
   </div>
 </div>
 
-<div class="modal-overlay" id="studentDetailModal" onclick="closeModalOnBackdrop(event,'studentDetailModal')">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('studentDetailModal')">✕</button>
-    <h3>Student Details</h3>
-    <div id="studentDetailContent"></div>
-    <div class="modal-actions">
-      <button class="btn-primary" onclick="closeModal('studentDetailModal')">Close</button>
-    </div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="qrModal" onclick="closeModalOnBackdrop(event,'qrModal')">
   <div class="modal" style="text-align:center">
     <button class="modal-close" onclick="closeModal('qrModal')">✕</button>
@@ -232,45 +217,81 @@ layout_nav('admin');
 </div>
 
 <script>
-// Show login overlay immediately; hide dashboard until authenticated
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('adminLoginOverlay').style.display = 'flex';
+document.addEventListener('DOMContentLoaded', function () {
+  // If a valid admin session already exists server-side, skip the login overlay
+  var serverSession = <?php echo json_encode(!empty($_SESSION['admin_id']) ? $_SESSION['admin_id'] : null); ?>;
+  var serverName    = <?php echo json_encode($_SESSION['admin_name'] ?? ''); ?>;
+  var serverRole    = <?php echo json_encode($_SESSION['admin_role'] ?? ''); ?>;
+
+  if (serverSession && serverRole === 'admin') {
+    document.getElementById('adminLoginOverlay').style.display = 'none';
+    document.getElementById('adminDashboard').style.display    = 'block';
+    var lbl = document.getElementById('adminNameLabel');
+    if (lbl) lbl.textContent = serverName;
+    loadAdminData();
+  } else {
+    document.getElementById('adminLoginOverlay').style.display = 'flex';
+  }
 });
 
-// Override doLogin to show/hide the right elements on this page
 function doLogin() {
   var fd = new FormData();
-  fd.append('action', 'admin_login');
+  fd.append('action',   'admin_login');
   fd.append('username', val('loginUser'));
   fd.append('password', val('loginPass'));
-  apiPost('actions/insert.php', fd).then(function(r) {
-    if (r.success) {
-      document.getElementById('adminLoginOverlay').style.display = 'none';
-      document.getElementById('adminDashboard').style.display    = 'block';
-      var lbl = document.getElementById('adminNameLabel');
-      if (lbl) lbl.textContent = r.name;
-      loadAdminData();
-    } else {
-      showToast(r.message, 'error');
+
+  apiPost('actions/insert.php', fd).then(function (r) {
+    if (!r.success) { showToast(r.message, 'error'); return; }
+
+    var role = (r.data && r.data.role) ? r.data.role : (r.role || '');
+    var name = (r.data && r.data.name) ? r.data.name : (r.name || '');
+
+    if (role !== 'admin') {
+      showToast('Access denied. This portal is for Admins only.', 'error');
+      var fd2 = new FormData(); fd2.append('action', 'admin_logout');
+      apiPost('actions/insert.php', fd2);
+      return;
     }
+
+    document.getElementById('adminLoginOverlay').style.display = 'none';
+    document.getElementById('adminDashboard').style.display    = 'block';
+    var lbl = document.getElementById('adminNameLabel');
+    if (lbl) lbl.textContent = name;
+    loadAdminData();
   });
 }
 
 function adminLogout() {
   var fd = new FormData();
   fd.append('action', 'admin_logout');
-  apiPost('actions/insert.php', fd).then(function() {
+  apiPost('actions/insert.php', fd).then(function () {
     window.location.href = 'index.php';
   });
 }
 
 function openQR() {
   var url = window.location.origin +
-            window.location.pathname.replace('admin.php','') +
+            window.location.pathname.replace('admin.php', '') +
             'attendance.php';
   document.getElementById('qrUrl').textContent = url;
   openModal('qrModal');
-  setTimeout(function(){ drawQR(url); }, 80);
+  setTimeout(function () { drawQR(url); }, 80);
+}
+
+function deleteEvent(eventId, eventName) {
+  if (!confirm('Are you sure you want to delete "' + eventName + '"?\n\nThis will also remove all attendance records for this event.')) {
+    return;
+  }
+
+  var fd = new FormData();
+  fd.append('action',   'delete_event');
+  fd.append('event_id', eventId);
+
+  apiPost('actions/insert.php', fd).then(function (r) {
+    if (!r.success) { showToast(r.message, 'error'); return; }
+    showToast(r.message, 'success');
+    loadAdminData(); // Refresh overview, events tab, and attendance lists
+  });
 }
 </script>
 

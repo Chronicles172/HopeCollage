@@ -5,6 +5,8 @@
 
 require_once __DIR__ . '/../config/db.php';
 
+session_start(); // ← Single session_start() for the entire file
+
 header('Content-Type: application/json');
 $action = $_GET['action'] ?? '';
 
@@ -21,8 +23,6 @@ switch ($action) {
 
     // ── All parents + their students (grouped by student) ────
     case 'parents':
-        // Fetch every (student, parent) pair via the junction table.
-        // is_linked_copy = 0 ensures we only show real student rows.
         $rows = getDB()->query(
             'SELECT
                s.id              AS s_id,
@@ -54,10 +54,8 @@ switch ($action) {
              ORDER BY s.id ASC, p.registered_at ASC'
         )->fetchAll();
 
-        // Group: studentId → { student info, parents[] }
-        // Also build a flat parents list for backwards-compat fields.
         $studentMap = [];
-        $parentMap  = [];   // parentId → parent record (for the flat parents[] array)
+        $parentMap  = [];
 
         foreach ($rows as $row) {
             $sid = $row['s_id'];
@@ -80,7 +78,6 @@ switch ($action) {
                 ];
             }
 
-            // Avoid duplicate parents for a student
             $alreadyLinked = false;
             foreach ($studentMap[$sid]['parents'] as $ep) {
                 if ($ep['id'] === $pid) { $alreadyLinked = true; break; }
@@ -101,7 +98,6 @@ switch ($action) {
                 ];
             }
 
-            // Also keep a flat parents map (for the old top-level parents[] endpoint consumers)
             if (!isset($parentMap[$pid])) {
                 $parentMap[$pid] = [
                     'id'               => $pid,
@@ -115,7 +111,6 @@ switch ($action) {
                     'national_id_no'   => $row['national_id_no'],
                     'photo_path'       => $row['photo_path'],
                     'registered_at'    => $row['registered_at'],
-                    // Flat ward fields kept for backwards compat
                     's_first'          => $row['s_first'],
                     's_last'           => $row['s_last'],
                     'student_class'    => $row['student_class'],
@@ -126,7 +121,6 @@ switch ($action) {
             }
         }
 
-        // Attach all wards to each parent (for old consumers that iterate allParents)
         foreach ($studentMap as $sid => $student) {
             foreach ($student['parents'] as $p) {
                 $pid = $p['id'];
@@ -153,13 +147,10 @@ switch ($action) {
             }
         }
 
-        // The response carries BOTH data shapes:
-        //   data.students  → student-centric (each student with their parents[])
-        //   data.parents   → parent-centric  (each parent with their wards[])  [legacy]
         echo json_encode([
             'success'  => true,
-            'data'     => array_values($parentMap),     // legacy shape (allParents)
-            'students' => array_values($studentMap),    // new shape for dashboards
+            'data'     => array_values($parentMap),
+            'students' => array_values($studentMap),
         ]);
         break;
 
@@ -197,7 +188,6 @@ switch ($action) {
         $row = $stmt->fetch();
         if (!$row) { echo json_encode(['success' => false, 'message' => 'No parent found with that phone number.']); break; }
 
-        // Fetch all real wards linked to this parent via the junction table
         $ws = $pdb->prepare(
             'SELECT s.id, s.first_name, s.last_name, s.student_class, s.house,
                     s.nhis_id, s.student_id_no, s.gender, s.photo_path
@@ -209,7 +199,6 @@ switch ($action) {
         $ws->execute([$row['id']]);
         $wards = $ws->fetchAll();
 
-        // For each ward, also fetch ALL parents so dashboards can display them
         foreach ($wards as &$ward) {
             $ps = $pdb->prepare(
                 'SELECT p2.id, p2.first_name, p2.last_name, p2.phone, p2.relationship, p2.photo_path
@@ -224,7 +213,6 @@ switch ($action) {
         unset($ward);
 
         $row['wards'] = $wards;
-        // Backwards-compat flat fields for the first ward
         $first = $wards[0] ?? [];
         $row['s_first']       = $first['first_name']    ?? null;
         $row['s_last']        = $first['last_name']     ?? null;
@@ -253,76 +241,31 @@ switch ($action) {
 
     // ── Search students by name or ID (for parent linking) ────
     case 'search_students':
+        $q = trim($_GET['q'] ?? '');
+        if (strlen($q) < 2) { echo json_encode(['success'=>true,'data'=>[]]); break; }
 
-    $q = trim($_GET['q'] ?? '');
-
-    // Prevent empty or tiny searches
-    if (strlen($q) < 2) {
-        echo json_encode([
-            'success' => true,
-            'data'    => []
-        ]);
+        $like = '%' . $q . '%';
+        $stmt = getDB()->prepare(
+            'SELECT s.id, s.first_name, s.last_name, s.student_class, s.student_id_no,
+                    p.first_name AS p_first, p.last_name AS p_last, p.relationship
+             FROM students s
+             JOIN parents p ON p.id = s.parent_id
+             WHERE s.is_linked_copy = 0
+               AND (s.first_name LIKE ? OR s.last_name LIKE ?
+                OR CONCAT(s.first_name," ",s.last_name) LIKE ?
+                OR s.student_id_no LIKE ?)
+             ORDER BY s.first_name ASC LIMIT 10'
+        );
+        $stmt->execute([$like, $like, $like, $like]);
+        echo json_encode(['success' => true, 'data' => $stmt->fetchAll()]);
         break;
-    }
-
-    $like = '%' . $q . '%';
-
-    $stmt = getDB()->prepare("
-        SELECT 
-            s.id,
-            s.first_name,
-            s.last_name,
-            s.student_class,
-            s.student_id_no,
-
-            p.first_name AS p_first,
-            p.last_name  AS p_last,
-            p.relationship
-
-        FROM students s
-
-        JOIN student_parents sp
-            ON sp.student_id = s.id
-
-        JOIN parents p
-            ON p.id = sp.parent_id
-
-        WHERE s.is_linked_copy = 0
-          AND (
-                s.first_name LIKE ?
-             OR s.last_name LIKE ?
-             OR CONCAT(s.first_name, ' ', s.last_name) LIKE ?
-             OR s.student_id_no LIKE ?
-          )
-
-        ORDER BY s.first_name ASC
-        LIMIT 10
-    ");
-
-    $stmt->execute([
-        $like,
-        $like,
-        $like,
-        $like
-    ]);
-
-    $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    echo json_encode([
-        'success' => true,
-        'data'    => $students
-    ]);
-
-    break;
 
     // ── Exeat requests (filtered by status and/or gender) ─────
     case 'exeats':
-        $status = trim($_GET['status'] ?? '');
-        $gender = trim($_GET['gender'] ?? '');
+        $status  = trim($_GET['status'] ?? '');
+        $gender  = trim($_GET['gender'] ?? '');
         $allowed = ['pending','approved','declined'];
 
-        // Join via the exeat's own parent_id (the requesting parent)
-        // Then also gather all parents for that student for display
         $sql = 'SELECT e.id, e.reason, e.departure_date, e.departure_time, e.expected_return,
                        e.actual_return, e.status, e.review_note, e.created_at,
                        s.id AS student_id, s.first_name AS s_first, s.last_name AS s_last,
@@ -350,7 +293,6 @@ switch ($action) {
         $stmt->execute($params);
         $rows = $stmt->fetchAll();
 
-        // Attach all parents for each student
         $stmtAllParents = $pdb->prepare(
             'SELECT p2.id, p2.first_name, p2.last_name, p2.phone, p2.relationship, p2.photo_path
              FROM parents p2
@@ -374,7 +316,6 @@ switch ($action) {
 
         $pdb = getDB();
 
-        // Fetch real students of the requested gender
         $stmt = $pdb->prepare(
             'SELECT s.id, s.first_name, s.last_name, s.student_class, s.house,
                     s.nhis_id, s.student_id_no, s.gender, s.photo_path,
@@ -391,7 +332,6 @@ switch ($action) {
         $stmt->execute([$gender]);
         $rows = $stmt->fetchAll();
 
-        // For each student, fetch ALL their parents via the junction table
         $stmtParents = $pdb->prepare(
             'SELECT p.id, p.first_name, p.last_name, p.phone, p.relationship, p.photo_path
              FROM parents p
@@ -403,7 +343,6 @@ switch ($action) {
         foreach ($rows as &$r) {
             $stmtParents->execute([$r['id']]);
             $r['parents']   = $stmtParents->fetchAll();
-            // Backwards-compat flat fields (first parent)
             $fp = $r['parents'][0] ?? [];
             $r['p_first']   = $fp['first_name']  ?? null;
             $r['p_last']    = $fp['last_name']   ?? null;
@@ -415,56 +354,6 @@ switch ($action) {
 
         echo json_encode(['success' => true, 'data' => $rows]);
         break;
-		
-		
-	case 'student':
-
-    $id = (int)($_GET['id'] ?? 0);
-
-    if (!$id) {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Invalid student ID.'
-        ]);
-        break;
-    }
-
-    $stmt = getDB()->prepare("
-        SELECT 
-            id,
-            first_name,
-            last_name,
-            student_class,
-            house,
-            nhis_id,
-            date_of_birth,
-            gender,
-            student_id_no,
-            photo_path
-        FROM students
-        WHERE id = ?
-        LIMIT 1
-    ");
-
-    $stmt->execute([$id]);
-
-    $student = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$student) {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Student not found.'
-        ]);
-        break;
-    }
-
-    echo json_encode([
-        'success' => true,
-        'message' => 'Student loaded.',
-        'data' => $student
-    ]);
-
-    break;
 
     // ── Full student record + all parents + exeat history ─────
     case 'student_full_data':
@@ -473,7 +362,6 @@ switch ($action) {
 
         $pdb  = getDB();
 
-        // Fetch student
         $stmt = $pdb->prepare(
             'SELECT s.id, s.first_name, s.last_name, s.student_class, s.student_id_no,
                     s.gender, s.date_of_birth, s.photo_path
@@ -484,7 +372,6 @@ switch ($action) {
         $student = $stmt->fetch();
         if (!$student) { echo json_encode(['success'=>false,'message'=>'Student not found.']); break; }
 
-        // Fetch ALL parents via junction table
         $ps = $pdb->prepare(
             'SELECT p.id, p.first_name, p.last_name, p.phone, p.email,
                     p.relationship, p.address, p.photo_path
@@ -496,7 +383,6 @@ switch ($action) {
         $ps->execute([$sid]);
         $student['parents'] = $ps->fetchAll();
 
-        // Backwards-compat flat fields (first parent)
         $fp = $student['parents'][0] ?? [];
         $student['p_first']      = $fp['first_name']  ?? null;
         $student['p_last']       = $fp['last_name']   ?? null;
@@ -504,7 +390,6 @@ switch ($action) {
         $student['email']        = $fp['email']        ?? null;
         $student['relationship'] = $fp['relationship'] ?? null;
 
-        // Exeat history
         $ex = $pdb->prepare(
             'SELECT e.*, a.full_name AS reviewer_name
              FROM exeat_requests e
