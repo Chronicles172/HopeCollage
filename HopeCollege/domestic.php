@@ -15,9 +15,13 @@ layout_nav('domestic');
     </div>
     <div class="form-group" style="margin-bottom:1.25rem">
       <label>Password</label>
-      <input type="password" id="dLoginPass" placeholder="Enter your password"
-        autocomplete="current-password"
-        onkeydown="if(event.key==='Enter') dDoLogin()"/>
+      <div class="password-field-wrap">
+        <input type="password" id="dLoginPass" placeholder="Enter your password"
+          autocomplete="current-password"
+          onkeydown="if(event.key==='Enter') dDoLogin()"/>
+        <button type="button" class="password-toggle-btn" aria-label="Show password"
+          onclick="togglePasswordVisibility('dLoginPass', this)">👁</button>
+      </div>
     </div>
     <button class="btn-primary" style="width:100%" onclick="dDoLogin()">Login →</button>
     <a href="index.php" class="btn-outline"
@@ -100,11 +104,19 @@ layout_nav('domestic');
           </div>
           <div class="form-group" style="margin-bottom:12px">
             <label>New Password (leave blank to keep current)</label>
-            <input type="password" id="dNewPass" placeholder="Min 8 characters"/>
+            <div class="password-field-wrap">
+              <input type="password" id="dNewPass" placeholder="Min 8 characters"/>
+              <button type="button" class="password-toggle-btn" aria-label="Show password"
+                onclick="togglePasswordVisibility('dNewPass', this)">👁</button>
+            </div>
           </div>
           <div class="form-group" style="margin-bottom:1.25rem">
             <label>Current Password <span class="req">*</span></label>
-            <input type="password" id="dCurPass" placeholder="Required to confirm changes"/>
+            <div class="password-field-wrap">
+              <input type="password" id="dCurPass" placeholder="Required to confirm changes"/>
+              <button type="button" class="password-toggle-btn" aria-label="Show password"
+                onclick="togglePasswordVisibility('dCurPass', this)">👁</button>
+            </div>
           </div>
           <button class="btn-primary" onclick="dChangeCredentials()">Save Changes</button>
         </div>
