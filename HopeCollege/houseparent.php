@@ -20,9 +20,13 @@ layout_nav('houseparent');
     </div>
     <div class="form-group" style="margin-bottom:1.25rem">
       <label>Password</label>
-      <input type="password" id="hpLoginPass" placeholder="Enter your password"
-        autocomplete="current-password"
-        onkeydown="if(event.key==='Enter') hpDoLogin()"/>
+      <div class="password-field-wrap">
+        <input type="password" id="hpLoginPass" placeholder="Enter your password"
+          autocomplete="current-password"
+          onkeydown="if(event.key==='Enter') hpDoLogin()"/>
+        <button type="button" class="password-toggle-btn" aria-label="Show password"
+          onclick="togglePasswordVisibility('hpLoginPass', this)">👁</button>
+      </div>
     </div>
     <button class="btn-primary" style="width:100%" onclick="hpDoLogin()">Login →</button>
     <a href="index.php" class="btn-outline"
@@ -162,11 +166,19 @@ layout_nav('houseparent');
           </div>
           <div class="form-group" style="margin-bottom:12px">
             <label>New Password (leave blank to keep current)</label>
-            <input type="password" id="hpNewPass" placeholder="Min 8 characters"/>
+            <div class="password-field-wrap">
+              <input type="password" id="hpNewPass" placeholder="Min 8 characters"/>
+              <button type="button" class="password-toggle-btn" aria-label="Show password"
+                onclick="togglePasswordVisibility('hpNewPass', this)">👁</button>
+            </div>
           </div>
           <div class="form-group" style="margin-bottom:1.25rem">
             <label>Current Password <span class="req">*</span></label>
-            <input type="password" id="hpCurPass" placeholder="Required to confirm changes"/>
+            <div class="password-field-wrap">
+              <input type="password" id="hpCurPass" placeholder="Required to confirm changes"/>
+              <button type="button" class="password-toggle-btn" aria-label="Show password"
+                onclick="togglePasswordVisibility('hpCurPass', this)">👁</button>
+            </div>
           </div>
           <button class="btn-primary" onclick="hpChangeCredentials()">Save Changes</button>
         </div>
