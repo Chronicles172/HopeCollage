@@ -487,6 +487,25 @@ function adminTab(tab) {
   if (tab === 'announce') loadAdminAnnouncements();
 }
 
+// ── Admin: Change Credentials ──────────────────────────────────
+function aChangeCredentials() {
+  var fd = new FormData();
+  fd.append('action',           'change_credentials');
+  fd.append('new_username',     val('aNewUser'));
+  fd.append('new_password',     val('aNewPass'));
+  fd.append('current_password', val('aCurPass'));
+  apiPost('actions/insert.php', fd).then(function(r) {
+    if (r.success) {
+      showToast('Credentials updated!', 'success');
+      document.getElementById('aNewUser').value = '';
+      document.getElementById('aNewPass').value = '';
+      document.getElementById('aCurPass').value = '';
+    } else {
+      showToast(r.message, 'error');
+    }
+  });
+}
+
 // ── ANNOUNCEMENTS ADMIN ───────────────────────────────────────
 var _adminAnns = [];
 
@@ -881,6 +900,7 @@ function viewParentById(id) {
 
 // Track the parent currently open in the detail modal and the student selected for linking
 var _detailParent = null;
+var _detailStudent = null;
 var _linkSelectedStudent = null;
 
 function viewParent(p) {
@@ -987,7 +1007,66 @@ function viewStudent(studentId) {
   '</div>';
   
   document.getElementById('studentDetailContent').innerHTML = content;
+  _detailStudent = student;
+  var editBtn = document.getElementById('editStudentBtn');
+  if (editBtn) editBtn.onclick = function() { openEditStudent(student); };
   openModal('studentDetailModal');
+}
+
+// ── EDIT STUDENT (admin) ────────────────────────────────────────
+function openEditStudent(student) {
+  if (!student) return;
+  closeModal('studentDetailModal');
+
+  document.getElementById('es_first').value   = student.first_name || '';
+  document.getElementById('es_last').value    = student.last_name  || '';
+  document.getElementById('es_class').value   = student.student_class || '';
+  document.getElementById('es_house').value   = student.house || '';
+  document.getElementById('es_gender').value  = student.gender || '';
+  document.getElementById('es_dob').value     = student.date_of_birth ? student.date_of_birth.split(' ')[0] : '';
+  document.getElementById('es_idno').value    = student.student_id_no || '';
+  document.getElementById('es_nhis').value    = student.nhis_id || '';
+  document.getElementById('es_medical').value = student.medical_condition || '';
+
+  var photoInput = document.getElementById('es_photo');
+  if (photoInput) photoInput.value = '';
+  var preview = document.getElementById('es_photo_preview');
+  if (preview) {
+    if (student.photo_path) { preview.src = student.photo_path; preview.style.display = 'block'; }
+    else { preview.style.display = 'none'; preview.src = ''; }
+  }
+
+  openModal('editStudentModal');
+}
+
+function saveStudentEdit() {
+  if (!_detailStudent) { showToast('No student selected.', 'error'); return; }
+
+  var first = val('es_first'), last = val('es_last'), cls = val('es_class');
+  if (!first || !last || !cls) { showToast('First name, last name, and class are required.', 'error'); return; }
+
+  var fd = new FormData();
+  fd.append('action',             'update_student');
+  fd.append('student_id',         _detailStudent.id);
+  fd.append('first_name',         first);
+  fd.append('last_name',          last);
+  fd.append('student_class',      cls);
+  fd.append('house',              val('es_house'));
+  fd.append('gender',             val('es_gender'));
+  fd.append('date_of_birth',      val('es_dob'));
+  fd.append('student_id_no',      val('es_idno'));
+  fd.append('nhis_id',            val('es_nhis'));
+  fd.append('medical_condition',  val('es_medical'));
+
+  var photoFile = (document.getElementById('es_photo') || {files:[]}).files[0];
+  if (photoFile) fd.append('student_photo', photoFile);
+
+  apiPost('actions/insert.php', fd).then(function(r) {
+    if (!r.success) { showToast(r.message, 'error'); return; }
+    showToast('Student updated successfully!', 'success');
+    closeModal('editStudentModal');
+    loadAdminParents(); // refresh table + underlying data
+  });
 }
 
 var _linkSearchTimer = null;
@@ -1285,6 +1364,21 @@ function downloadQR() {
   if (!src) { showToast('QR not ready yet.'); return; }
   var a=document.createElement('a'); a.download='attendance-qr.png'; a.href=src; a.click();
   showToast('QR downloaded!','success');
+}
+
+// ── PASSWORD VISIBILITY TOGGLE ──────────────────────────────
+function togglePasswordVisibility(inputId, btnEl) {
+  var input = document.getElementById(inputId);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    btnEl.textContent = '🙈';
+    btnEl.setAttribute('aria-label', 'Hide password');
+  } else {
+    input.type = 'password';
+    btnEl.textContent = '👁';
+    btnEl.setAttribute('aria-label', 'Show password');
+  }
 }
 
 // ── MODAL UTILS ───────────────────────────────────────────────

@@ -24,9 +24,13 @@ layout_nav('admin');
     </div>
     <div class="form-group" style="margin-bottom:1.25rem">
       <label>Password</label>
-      <input type="password" id="loginPass" placeholder="Enter your password"
-        autocomplete="current-password"
-        onkeydown="if(event.key==='Enter') doLogin()"/>
+      <div class="password-field-wrap">
+        <input type="password" id="loginPass" placeholder="Enter your password"
+          autocomplete="current-password"
+          onkeydown="if(event.key==='Enter') doLogin()"/>
+        <button type="button" class="password-toggle-btn" aria-label="Show password"
+          onclick="togglePasswordVisibility('loginPass', this)">👁</button>
+      </div>
     </div>
     <button class="btn-primary" style="width:100%" onclick="doLogin()">Login →</button>
     <a href="index.php" class="btn-outline"
@@ -49,6 +53,7 @@ layout_nav('admin');
         <div class="sidebar-link"        id="sb-events"    onclick="adminTab('events')"><span class="icon">📅</span> Events</div>
         <div class="sidebar-link"        id="sb-checkin"   onclick="adminTab('checkin')"><span class="icon">✅</span> Attendance</div>
         <div class="sidebar-link"        id="sb-announce"  onclick="adminTab('announce')"><span class="icon">📢</span> Announcements</div>
+        <div class="sidebar-link"        id="sb-settings"  onclick="adminTab('settings')"><span class="icon">⚙️</span> Settings</div>
         <div class="sidebar-link"        id="sb-qr"        onclick="openQR()"><span class="icon">📲</span> QR Code</div>
       </div>
       <div style="padding:0 1.5rem;margin-top:auto;padding-top:2rem">
@@ -177,6 +182,35 @@ layout_nav('admin');
         </div>
       </div>
 
+      <!-- Tab: Settings -->
+      <div class="admin-sub" id="admin-settings">
+        <div class="admin-header"><h1>Account Settings</h1></div>
+        <div class="form-card" style="max-width:480px">
+          <div class="form-section-title">🔐 Change Credentials</div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label>New Username (leave blank to keep current)</label>
+            <input type="text" id="aNewUser" placeholder="New username"/>
+          </div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label>New Password (leave blank to keep current)</label>
+            <div class="password-field-wrap">
+              <input type="password" id="aNewPass" placeholder="Min 8 characters"/>
+              <button type="button" class="password-toggle-btn" aria-label="Show password"
+                onclick="togglePasswordVisibility('aNewPass', this)">👁</button>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:1.25rem">
+            <label>Current Password <span class="req">*</span></label>
+            <div class="password-field-wrap">
+              <input type="password" id="aCurPass" placeholder="Required to confirm changes"/>
+              <button type="button" class="password-toggle-btn" aria-label="Show password"
+                onclick="togglePasswordVisibility('aCurPass', this)">👁</button>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="aChangeCredentials()">Save Changes</button>
+        </div>
+      </div>
+
     </main>
   </div>
 </div>
@@ -242,7 +276,81 @@ layout_nav('admin');
     <h3>Student Details</h3>
     <div id="studentDetailContent"></div>
     <div class="modal-actions">
-      <button class="btn-primary" onclick="closeModal('studentDetailModal')">Close</button>
+      <button class="btn-outline" style="color:var(--navy);border-color:var(--border)" onclick="closeModal('studentDetailModal')">Close</button>
+      <button class="btn-primary" id="editStudentBtn">✎ Edit Student</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editStudentModal" onclick="closeModalOnBackdrop(event,'editStudentModal')">
+  <div class="modal" style="max-width:560px">
+    <button class="modal-close" onclick="closeModal('editStudentModal')">✕</button>
+    <h3>Edit Student</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>First Name <span class="req">*</span></label>
+        <input type="text" id="es_first"/>
+      </div>
+      <div class="form-group">
+        <label>Last Name <span class="req">*</span></label>
+        <input type="text" id="es_last"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Class <span class="req">*</span></label>
+        <input type="text" id="es_class"/>
+      </div>
+      <div class="form-group">
+        <label>House / Hall</label>
+        <input type="text" id="es_house"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Gender</label>
+        <select id="es_gender">
+          <option value="">— Select —</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Date of Birth</label>
+        <input type="date" id="es_dob"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Student ID No.</label>
+        <input type="text" id="es_idno"/>
+      </div>
+      <div class="form-group">
+        <label>NHIS ID Number</label>
+        <input type="text" id="es_nhis"/>
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group">
+        <label>Medical Condition / Allergies</label>
+        <textarea id="es_medical" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group">
+        <label>Replace Photo <span style="font-size:11px;color:var(--text-muted)">(optional — leave blank to keep current)</span></label>
+        <label class="photo-upload-label" for="es_photo">
+          <img id="es_photo_preview" class="photo-preview" alt=""/>
+          <span>📷 Click to upload new photo</span>
+          <span style="font-size:11px">JPG / PNG / WEBP · max 5 MB</span>
+        </label>
+        <input type="file" id="es_photo" accept="image/*" style="display:none" onchange="previewPhoto(this,'es_photo_preview')"/>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-outline" style="color:var(--navy);border-color:var(--border)" onclick="closeModal('editStudentModal')">Cancel</button>
+      <button class="btn-primary" onclick="saveStudentEdit()">Save Changes</button>
     </div>
   </div>
 </div>

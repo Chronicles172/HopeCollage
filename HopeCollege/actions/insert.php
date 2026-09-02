@@ -452,6 +452,65 @@ if (isset($_POST['students']) && is_array($_POST['students'])) {
         break;
 
     // ──────────────────────────────────────────────────────────
+    // 13. UPDATE STUDENT (admin only)
+    // ──────────────────────────────────────────────────────────
+    case 'update_student':
+        session_start();
+        if (empty($_SESSION['admin_id'])) jsonResponse(false, 'Unauthorised.');
+
+        $studentId = (int)($_POST['student_id'] ?? 0);
+        if (!$studentId) jsonResponse(false, 'Student ID is required.');
+
+        $firstName  = trim($_POST['first_name']       ?? '');
+        $lastName   = trim($_POST['last_name']        ?? '');
+        $class      = trim($_POST['student_class']    ?? '');
+        $house      = trim($_POST['house']             ?? '');
+        $nhis       = trim($_POST['nhis_id']            ?? '');
+        $dob        = trim($_POST['date_of_birth']      ?? '');
+        $gender     = trim($_POST['gender']              ?? '');
+        $idNo       = trim($_POST['student_id_no']       ?? '');
+        $medical    = trim($_POST['medical_condition']   ?? '');
+
+        if (!$firstName || !$lastName || !$class) {
+            jsonResponse(false, 'First name, last name, and class are required.');
+        }
+
+        $allowedGender = ['Male', 'Female', 'Other'];
+        if ($gender && !in_array($gender, $allowedGender, true)) $gender = null;
+
+        $pdb = getDB();
+
+        // Verify student exists and is a real (non-linked-copy) record
+        $chk = $pdb->prepare('SELECT id, photo_path FROM students WHERE id = ? AND is_linked_copy = 0 LIMIT 1');
+        $chk->execute([$studentId]);
+        $existing = $chk->fetch();
+        if (!$existing) jsonResponse(false, 'Student not found.');
+
+        // Optional new photo
+        $newPhoto = null;
+        if (isset($_FILES['student_photo']) && $_FILES['student_photo']['error'] === UPLOAD_ERR_OK) {
+            $newPhoto = saveUploadedPhoto($_FILES['student_photo'], 'student');
+            if (!$newPhoto) jsonResponse(false, 'Photo upload failed. Please check file type/size (max 5MB).');
+        }
+        $photoToSave = $newPhoto ?: $existing['photo_path'];
+
+        $stmt = $pdb->prepare(
+            'UPDATE students
+             SET first_name = ?, last_name = ?, student_class = ?, house = ?, nhis_id = ?,
+                 date_of_birth = ?, gender = ?, student_id_no = ?, medical_condition = ?, photo_path = ?
+             WHERE id = ?'
+        );
+        $stmt->execute([
+            $firstName, $lastName, $class,
+            $house ?: null, $nhis ?: null, $dob ?: null,
+            $gender ?: null, $idNo ?: null, $medical ?: null,
+            $photoToSave, $studentId
+        ]);
+
+        jsonResponse(true, 'Student record updated successfully!');
+        break;
+
+    // ──────────────────────────────────────────────────────────
     // 12. TOGGLE PIN ANNOUNCEMENT (admin only)
     // ──────────────────────────────────────────────────────────
     case 'pin_announcement':
